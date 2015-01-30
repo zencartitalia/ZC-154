@@ -43,13 +43,10 @@ Per istruzioni molto più dettagliata di installazione, vedere il file [/docs/1.
 1. installare la nuova versione in una cartella "/-NUOVO"
 2. copiare e riportare dati, file di lingua modificati, immagini ecc. fra i due store, "vecchio" e "nuovo".
 3. esportare & importare fra i due database i clienti con indirizzi ed ordini;
-4. effettuare un back-up preventivo del database e procedere con il bugfix A
-5. da Strumenti > Installa patch SQL > eseguire la query "**bugfix_A.sql**" posta nella cartella
-UPGRADE bugfix zone ITA v150 – **cartella da non caricare nello spazio web**!
-6. Proseguire con tutta la parte del catalogo composta da categorie, articoli, attributi ecc;
-comparando i due database sarà semplice vedere cosa c'è e cosa manca da trasferire.
-7. verificare i dati / la sincronia fra i due store e testare tutto il nuovo ambiente.
-8. sostituire i due store fra loro modificando dati e percorsi nei due file di configurazione e nel DB
+4. proseguire con tutta la parte del catalogo composta da categorie, articoli, attributi ecc;
+5. comparare i due database: sarà semplice vedere cosa c'è e cosa manca da trasferire
+6. verificare i dati / la sincronia fra i due store e testare tutto il nuovo ambiente.
+7. sostituire i due store fra loro modificando dati e percorsi nei due file di configurazione e nel DB
 (per il percorso della cache); Il vecchio spostandone i file entro una cartella /_OLD ed il nuovo
 alzando i file dalla cartella "/-NUOVO" nella root o dove scelto.
 
@@ -57,6 +54,53 @@ alzando i file dalla cartella "/-NUOVO" nella root o dove scelto.
 Se nel “vecchio” store sono (stati installati e sono) presenti moduli che hanno aggiunto voci alle tabelle di categoria, articoli ecc. detti moduli (aggiornati all'attuale versione) dovranno essere installati anche nella nuova 1.5 prima del trasferimento dei dati stessi così fra i due database da avere lo stesso numero di campi presenti e non ottenere errori.
 
 *Per aggiornare la versione USA la procedura può essere differente e si rimanda alla documentazione allegata a quella distribuzione. La procedura indicata NON è comunque valida per aggiornamenti fra versioni linguistiche diverse.
+
+Se si sta aggiornando da una versione 1.5, la procedura è terminata. Se invece si sta effettuando l'aggiornamento da una 1.3.x a una 1.5.x, è necessario effettuare un'ulteriore operazione che consiste nell'esecuzione di un file (bugfix) contenente delle query sql per l'allineamento delle zone tra le due serie di versione.
+
+Istruzioni e files per questa operazione si trovano nel pacchetto della distribuzione ufficiale in download su sourceforge. In alternativa i soli files in questione e relative istruzioni, si trovano, sempre su sourceforge, in un archivio zip separato, al seguente indirizzo: http://sourceforge.net/projects/zencart-italia/files/Zen%20Cart%201.5.x/x_aggiornamento-da-13x.zip/download
+
+Esistono due diverse modalità di esecuzione del bugfix, a seconda del fatto che sia avvenuto almeno una nuova registrazione utente in seguito all’aggiornamento dal 1.3.x a 1.5.x oppure no.
+
+Se dopo aver effettuato l’aggiornamento non si è ancora realizzata una nuova registrazione cliente
+allora sarà possibile eseguire il bugfix A, altrimenti si dovrà procedere ed eseguire il bugfix B
+
+Istruzioni per come procedere per l’aggiornamento da 1.3.x a 1.5.x:
+
+bugfix A – da Strumenti > Installa patch SQL > eseguire la query “bugfix_A.sql”
+bugfix B:
+
+- Recuperare ID Cliente dell’ultimo (cliente) registrato nel vecchio negozio 1,3,xx.
+
+3 possibili metodi per recuperare l’ID:
+
+1) se ancora presente ed accessibile, procedere nel pannello di amministrazione della vecchia
+versione e da Clienti > Clienti prendere nota dell’ultimo ID Cliente.
+
+2) aprire il file .sql usato per importare i dati dalla vecchia versione alla nuova e prendere nota
+dell’ultimo ID Cliente (il numero più alto) della tabella address_book nel campo customers_id.
+
+3) accedere al pannello di amministrazione della nuova versione 1.5.x e in Clienti > Clienti
+recuperare l’ ID Cliente dell’ultimo registrato nella vecchia versione andando a verificare che la
+data presente nel campo Account Creato sia precedente alla messa online del nuovo sito.
+
+Una volta recuperato l’ID dell’ultimo cliente registratosi nel vecchio negozio
+
+- Aprire in modifica il file bugfix_B.sql ed inserire tale valore al posto di
+
+ID_ULTIMO_CLIENTE_SITO_VECCHIO
+
+Ad esempio se l’ultimo id cliente è il 1345, la query cambierà da
+update address_book ab set ab.entry_zone_id = (select zc.id_nuovo from zones_confronto zc where
+ab.entry_zone_id = zc.id_vecchio and ab.customers_id <= ID_ULTIMO_CLIENTE_SITO_VECCHIO and
+ab.entry_zone_id != 0 and ab.entry_country_id = 105);
+a
+update address_book ab set ab.entry_zone_id = (select zc.id_nuovo from zones_confronto zc where
+ab.entry_zone_id = zc.id_vecchio and ab.customers_id <= 1345 and ab.entry_zone_id != 0 and
+ab.entry_country_id = 105);
+
+- Salvare il file
+
+- da Strumenti > Installa patch SQL > eseguire la query “bugfix_B.sql”
 
 # PROSSIMI PASSI #
 Per **SICUREZZA** devi cambiare i permessi di scrittura, in sola lettura dei files configure.php posti in /admin/includes/ ed /includes/ prima di aprire il negozio al pubblico! Inoltre sarebbe opportuno rimuovere (invece che rinominare) la cartella /zc_install per evitare tentativi di re-installazione non autorizzati!
